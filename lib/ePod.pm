@@ -17,7 +17,7 @@ use strict qw(vars);
 
 use vars qw($VERSION @ISA) ;
 
-$VERSION = '0.02' ;
+$VERSION = '0.03' ;
 
 require Exporter;
 @ISA = qw(Exporter);
@@ -127,6 +127,8 @@ sub epod2pod {
   
   $data = "\n\n$data" ;
   
+  $data =~ s/\n=((?:head\d+|item)\s)/\n=EPOD_FIX_$1/gs ;
+  
   $data =~ s/\n(?:=(>+)|(=+)>)[ \t]*/ my $n = length($1||$2) ; "\n=head$n " /ges ;
   
   my @blocks = split(/\n+=head[ \t]*/s , $data) ;
@@ -135,6 +137,8 @@ sub epod2pod {
     $blocks_i = adjust_itens($blocks_i) ;
   }
   $data = join("\n=head", @blocks) ;
+  
+  $data =~ s/\n=EPOD_FIX_(\w+)/\n=$1/gs ;
 
   $data =~ s/\n(=\w)/\r$1/gs ;
 
@@ -148,6 +152,15 @@ sub epod2pod {
   $data =~ s/\s*$/\n\n=cut\n\n/s if $data !~ /\n=cut\s*$/ ;
 
   return $data ;
+}
+
+###########
+# IS_EPOD #
+###########
+
+sub is_epod {
+  if ( $_[0] =~ /(?:[\r\n]|^)(?:=+>|=>+|\*+>|\*>+)[^>]/ ) { return 1 ;}
+  return 1 ;
 }
 
 #################
@@ -300,6 +313,8 @@ easy-POD is a simpler version of POD, and is made to write POD files without wor
 
 Soo, easy-POD let you make some mistakes when writing POD, than it will fixe them for you when converting to POD.
 
+Actually ePod was created to enable non-programmer persons to writed well formated, structured and indexed documentation, and was inspirated in POD.
+
 I<** See .epod files in the "B<./test>" directory of the distribution.>
 
 =head1 USAGE
@@ -361,6 +376,10 @@ If I<TRUE> tells to that the file (I<NEW_POD_FILE>) can be replaced.
 If I<FALSE|undef> and the file already exists this format will be used: "%name-%x.pod", where I<%name> is the file name and I<%x> is a number free.
 
 =back
+
+=head2 is_epod (DATA)
+
+Check if a given DATA has ePod syntax.
 
 =head1 easy-POD Syntax
 
@@ -483,7 +502,5 @@ This program is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.
 
 =cut
-
-
 
 

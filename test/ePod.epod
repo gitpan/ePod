@@ -68,6 +68,10 @@ If I<TRUE> tells to that the file (I<NEW_POD_FILE>) can be replaced.
 
 If I<FALSE|undef> and the file already exists this format will be used: "%name-%x.pod", where I<%name> is the file name and I<%x> is a number free.
 
+==> is_epod (DATA)
+
+Check if a given DATA has ePod syntax.
+
 => easy-POD Syntax
 
 *> =headx

@@ -86,6 +86,10 @@ If I<FALSE|undef> and the file already exists this format will be used: "%name-%
 
 =back
 
+=head2 is_epod (DATA)
+
+Check if a given DATA has ePod syntax.
+
 =head1 easy-POD Syntax
 
 =over 10
