@@ -1,0 +1,13 @@
+Changes
+MANIFEST
+Makefile.PL
+README
+test.pl
+lib/ePod.pm
+test/1.simple.epod
+test/1.simple.pod
+test/2.simple.epod
+test/2.simple.pod
+test/3.item.epod
+test/3.item.pod
+
