@@ -17,7 +17,7 @@ use strict qw(vars);
 
 use vars qw($VERSION @ISA) ;
 
-$VERSION = '0.03' ;
+$VERSION = '0.04' ;
 
 require Exporter;
 @ISA = qw(Exporter);
@@ -61,7 +61,7 @@ sub new {
 ##########
 
 sub to_pod {
-  my $this = shift if UNIVERSAL::isa($_[0] , 'ePod') ;
+  my $this = UNIVERSAL::isa($_[0] , 'ePod') ? shift : undef ;
   $this = ePod->new() if !$this ;
   
   my ($data , $file) ;
@@ -105,7 +105,7 @@ sub to_pod {
 ############
 
 sub epod2pod {
-  my $this = shift if UNIVERSAL::isa($_[0] , 'ePod') ;
+  my $this = UNIVERSAL::isa($_[0] , 'ePod') ? shift : undef ;
   $this = ePod->new() if !$this ;
   
   $OVER_SIZE = $this->{OVERSIZE} ;
@@ -123,9 +123,18 @@ sub epod2pod {
 
   $data =~ s/\r\n?/\n/gs ;
   
+  $data = "\n\n$data\n" ;
+  
   $data =~ s/(\S)[ \t]+\n/$1\n/gs ;
   
-  $data = "\n\n$data" ;
+  1 while( $data =~ s/(\n\S[^\n]*)(?:\n[ \t]*){2,}(\n\S[^\n]*\n)/$1\n$2/gxs );
+
+  1 while( $data =~ s/((?:^|\n)\S[^\n]*\n)([ \t]+\n)+/
+    my $init = $1 ;
+    my $ns = $2 ;
+    $ns =~ s~[ \t]~~gs ;
+    "$init$ns"
+  /gexs ) ;
   
   $data =~ s/\n=((?:head\d+|item)\s)/\n=EPOD_FIX_$1/gs ;
   
@@ -135,8 +144,11 @@ sub epod2pod {
   foreach my $blocks_i ( @blocks ) {
     $blocks_i = adjust_spaces($blocks_i) ;
     $blocks_i = adjust_itens($blocks_i) ;
+    $blocks_i = adjust_itens($blocks_i) ;
   }
   $data = join("\n=head", @blocks) ;
+  
+  return undef if $data !~ /\S/s ;
   
   $data =~ s/\n=EPOD_FIX_(\w+)/\n=$1/gs ;
 
@@ -149,6 +161,9 @@ sub epod2pod {
   $data =~ s/\r//gs ;
   
   $data =~ s/^\s*/\n\n/s ;
+  
+  $data =~ s/^\s*/\n\n=pod\n\n/s if $data !~ /^\s*?\n=\w+\s/s ;
+  
   $data =~ s/\s*$/\n\n=cut\n\n/s if $data !~ /\n=cut\s*$/ ;
 
   return $data ;
@@ -183,41 +198,43 @@ sub adjust_itens {
   my $block = shift ;
   my $level = shift ;
 
-  my (@items) = ( $block =~ /(?:\n|^)
-                            (
-                              \/?
-                              (?:
-                                \*>+
+  {
+    my (@items) = ( $block =~ /(?:\n|^)
+                              (
+                                \/?
+                                (?:
+                                  \*>+
+                                  |
+                                  \*+>
+                                )
                                 |
-                                \*+>
+                                \*+\/
                               )
-                              |
-                              \*+\/
-                            )
-                            /sxg ) ;
-
-  return( $block ) if !@items ;
+                              /sxg ) ;
   
-  if ( !$level ) {
-    foreach my $items_i ( @items ) {
-      my ($n1,$n2) = ( $items_i =~ /^(?:(\*+)>|\*(>+))$/ );
-      my $n = length($n1 || $n2)  ;
-      next if !$n ;
-      $level = $n ;
-      last ;
-    }
-  }
-  else {
-    my $min_level ;
+    return( $block ) if !@items ;
     
-    foreach my $items_i ( @items ) {
-      my ($n1,$n2) = ( $items_i =~ /^(?:(\*+)>|\*(>+))$/ );
-      my $n = length($n1 || $n2)  ;
-      next if !$n ;
-      $min_level = $n if $n < $min_level || !$min_level ;
+    if ( !$level ) {
+      foreach my $items_i ( @items ) {
+        my ($n1,$n2) = ( $items_i =~ /^(?:(\*+)>|\*(>+))$/ );
+        my $n = length($n1 || $n2)  ;
+        next if !$n ;
+        $level = $n ;
+        last ;
+      }
     }
-
-    if ( $min_level > $level ) { $level = $min_level ;}
+    else {
+      my $min_level ;
+      
+      foreach my $items_i ( @items ) {
+        my ($n1,$n2) = ( $items_i =~ /^(?:(\*+)>|\*(>+))$/ );
+        my $n = length($n1 || $n2)  ;
+        next if !$n ;
+        $min_level = $n if $n < $min_level || !$min_level ;
+      }
+  
+      if ( $min_level > $level ) { $level = $min_level ;}
+    }
   }
   
   $level = 1 if $level < 1 ;  
@@ -239,6 +256,8 @@ sub adjust_itens {
   
   if ( $block_rest ) { $block_rest =~ s/\n$//s ;}
   else { $block_itens =~ s/\n$//s ;}
+  
+  $block_itens =~ s/\n=(item\s)/\n=EPOD_FIX_$1/gs ;
   
   ##########################
 
@@ -268,7 +287,7 @@ sub adjust_itens {
     $top = adjust_itens( adjust_spaces($top,1) ) ;
   }
   
-  $top =~ s/\s*$/\n\n=over $OVER_SIZE\n/s ;
+  $top =~ s/\s*$/\n\n=over $OVER_SIZE\n/s if @itens ;
 
   $itens[ $#itens ] =~ s/\s*$/\n\n=back\n/s if @itens ;
 

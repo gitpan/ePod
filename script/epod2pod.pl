@@ -27,7 +27,7 @@ exit;
   my $epod = ePod->new() ;
   
   my $epod_file = shift ;
-  my $pod_file = shift if $ARGV[0] =~ /pod/i ;
+  my $pod_file = $ARGV[0] =~ /pod/i ? shift : undef ;
 
   my $new_file = $epod->to_pod( $epod_file , $pod_file , @ARGV ) ;
 
