@@ -1,5 +1,8 @@
 Revision history for Perl extension ePod.
 
+0.02  2004-01-15
+      - Added script epod2pod.pl
+
 0.01  2004-01-13 16:16:17
       - original version;
 

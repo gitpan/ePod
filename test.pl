@@ -57,12 +57,18 @@ sub cat_file {
   foreach my $files_i ( sort @files ) {
     print "testing: $files_i.epod ". ('.' x (18 - length($files_i)) ) ."... " ;
 
-    my $pod = $epod->epod2pod( "$files_i.epod" ) ;
-    ##my (undef , $pod) = $epod->to_pod( "$files_i.epod" , "$files_i.pod" , 1 ) ; ## To generate the PODs
+    my $epod_file = "$files_i.epod" ;
+    my $pod_file = "$files_i.pod" ;
 
-    my $chk_pod = cat_file("$files_i.pod") ;
+    my $pod ;
+    if ( !-s $pod_file ) {
+      (undef , $pod) = $epod->to_pod($epod_file , $pod_file , 1 ) ; ## To generate the PODs
+    }
+    else {  $pod = $epod->epod2pod($epod_file) ; }
+
+    my $chk_pod = cat_file($pod_file) ;
     
-    print "*** ERRO with file: $files_i.epod\n" if $pod ne $chk_pod ;
+    print "*** ERRO with file: $epod_file\n" if $pod ne $chk_pod ;
     ok($pod , $chk_pod) ;
   }
 
