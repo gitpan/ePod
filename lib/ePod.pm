@@ -14,10 +14,11 @@ package ePod ;
 use 5.006 ;
 
 use strict qw(vars);
+no warnings ;
 
 use vars qw($VERSION @ISA) ;
 
-$VERSION = '0.04' ;
+$VERSION = '0.05' ;
 
 require Exporter;
 @ISA = qw(Exporter);
@@ -318,7 +319,7 @@ ePod - Handles easy-POD: write easy and simple, convert to POD, and from there y
 
 This module is used to conver easy-POD files to POD.
 
-easy-POD is a simpler version of POD, and is made to write POD files without worry about:
+easy-POD is a simplier version of POD, and is made to write POD files without worry about:
 
 =over 10
 
